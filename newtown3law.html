@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Newton's Third Law Simulation</title>
+  <!-- ใช้ Chart.js v3.9.1 ที่รับรองว่า Chart ถูกประกาศแน่นอน -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: linear-gradient(to bottom right, #cfe8fc, #f8c0c0); margin: 0; padding: 20px; }
+    .container { display: flex; flex-wrap: wrap; gap: 20px; }
+    .left, .right { flex: 1; min-width: 300px; }
+    .chart-container { height: 300px; margin-top: 20px; }
+    .car { font-size: 2rem; position: absolute; bottom: 50px; left: 0; transition: left 1s ease-in-out; }
+    .wall { position: absolute; right: 40px; bottom: 0; height: 200px; width: 20px; background-color: #555; }
+    .bang { font-size: 2rem; position: absolute; right: 60px; bottom: 150px; display: none; }
+    .labels { position: relative; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Newton's Third Law Simulator</h1>
+  <div class="container">
+    <div class="left">
+      <label>Car Speed (km/h): <span id="speed-val">50</span></label><br>
+      <input type="range" id="speed" min="10" max="100" step="5" value="50"><br><br>
+
+      <label>Car Mass (kg): <span id="mass-val">1000</span></label><br>
+      <input type="range" id="mass" min="500" max="2000" step="100" value="1000"><br><br>
+
+      <button onclick="simulate()">Simulate Collision</button>
+      <button onclick="resetSim()">Reset</button>
+
+      <div class="info">
+        <p><strong>Action Force:</strong> Car pushes on the wall.</p>
+        <p><strong>Reaction Force:</strong> Wall pushes back with equal force.</p>
+        <p><strong>Momentum:</strong> <span id="momentum">0</span> kg·m/s</p>
+        <p><strong>Kinetic Energy:</strong> <span id="ke">0</span> J</p>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="momentumChart"></canvas>
+      </div>
+    </div>
+
+    <div class="right" style="position: relative; height: 300px;">
+      <div class="car" id="car">🚗</div>
+      <div class="wall"></div>
+      <div class="bang" id="bang">💥</div>
+    </div>
+  </div>
+
+  <script>
+    const speedInput = document.getElementById('speed');
+    const massInput = document.getElementById('mass');
+    const speedVal = document.getElementById('speed-val');
+    const massVal = document.getElementById('mass-val');
+    const car = document.getElementById('car');
+    const bang = document.getElementById('bang');
+    const momentumText = document.getElementById('momentum');
+    const keText = document.getElementById('ke');
+    let runCount = 0;
+
+    const ctx = document.getElementById('momentumChart').getContext('2d');
+    const momentumChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Momentum (kg·m/s)',
+          data: [],
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+
+    speedInput.addEventListener('input', () => {
+      speedVal.textContent = speedInput.value;
+    });
+
+    massInput.addEventListener('input', () => {
+      massVal.textContent = massInput.value;
+    });
+
+    function simulate() {
+      const speed = parseFloat(speedInput.value);
+      const mass = parseFloat(massInput.value);
+      const velocity = speed / 3.6;
+      const momentum = mass * velocity;
+      const ke = 0.5 * mass * velocity ** 2;
+
+      momentumText.textContent = momentum.toFixed(2);
+      keText.textContent = ke.toFixed(2);
+
+      runCount++;
+      momentumChart.data.labels.push('Run ' + runCount);
+      momentumChart.data.datasets[0].data.push(momentum);
+      momentumChart.update();
+
+      car.style.left = 'calc(100% - 100px)';
+      bang.style.display = 'block';
+      setTimeout(() => {
+        bang.style.display = 'none';
+      }, 1000);
+    }
+
+    function resetSim() {
+      runCount = 0;
+      momentumChart.data.labels = [];
+      momentumChart.data.datasets[0].data = [];
+      momentumChart.update();
+      car.style.left = '0';
+      bang.style.display = 'none';
+      momentumText.textContent = '0';
+      keText.textContent = '0';
+    }
+  </script>
+</body>
+</html>
